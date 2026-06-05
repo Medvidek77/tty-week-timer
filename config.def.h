@@ -1,7 +1,12 @@
 /* See LICENSE file for copyright and license details. */
 
-/* API configuration */
-static const char *api_url = "http://178.62.236.80/tty_week/api";
+/* API configuration for the daemon */
+static const char *api_url = "http://127.0.0.1:8080/";
+
+/* API Server Configuration (tty_week_server) */
+static const char *server_host = "0.0.0.0";
+static const int server_port = 8080;
+static const char *server_state_file = "server_state.txt";
 
 /* Save location for the timer. ~ is not expanded automatically in C,
  * so we will construct this dynamically using $HOME if not absolute.

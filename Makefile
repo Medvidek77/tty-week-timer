@@ -3,10 +3,10 @@
 
 include config.mk
 
-SRC = tty_week.c tty_weekd.c
+SRC = tty_week.c tty_weekd.c tty_week_server.c
 OBJ = ${SRC:.c=.o}
 
-all: tty_week tty_weekd
+all: tty_week tty_weekd tty_week_server
 
 .c.o:
 	${CC} -c ${CFLAGS} $<
@@ -22,8 +22,11 @@ tty_week: tty_week.o
 tty_weekd: tty_weekd.o
 	${CC} -o $@ tty_weekd.o ${LDFLAGS}
 
+tty_week_server: tty_week_server.o
+	${CC} -o $@ tty_week_server.o
+
 clean:
-	rm -f tty_week tty_weekd ${OBJ} tty_week-${VERSION}.tar.gz
+	rm -f tty_week tty_weekd tty_week_server ${OBJ} tty_week-${VERSION}.tar.gz
 
 dist: clean
 	mkdir -p tty_week-${VERSION}

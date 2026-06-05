@@ -2,3 +2,4 @@ config.h
 tty_week
 tty_weekd
 *.o
+tty_week_server
