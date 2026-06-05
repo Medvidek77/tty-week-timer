@@ -13,7 +13,7 @@ all: tty_week tty_weekd tty_week_server
 
 ${OBJ}: config.h config.mk
 
-config.h:
+config.h: config.def.h
 	cp config.def.h $@
 
 tty_week: tty_week.o
