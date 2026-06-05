@@ -58,9 +58,9 @@ static void
 get_end_as_local_time(const char *time_left_str, char *buffer, size_t size)
 {
 	if (strcmp(time_left_str, "WAITING") == 0) {
-		snprintf(buffer, size, "Still waiting for the challenge to start");
+		snprintf(buffer, size, "waiting");
 	} else if (strcmp(time_left_str, "END!") == 0) {
-		snprintf(buffer, size, "The challenge is already over");
+		snprintf(buffer, size, "ended");
 	} else {
 		long tl = atol(time_left_str);
 		time_t current_time = time(NULL);
@@ -82,7 +82,7 @@ run(void)
 	fetch_time_left(time_left_str, sizeof(time_left_str));
 	get_end_as_local_time(time_left_str, end_time_str, sizeof(end_time_str));
 
-	printf("The challenge will end at: %s\n", end_time_str);
+	printf("end: %s\n", end_time_str);
 
 	if (strcmp(time_left_str, "WAITING") == 0) {
 		time_left = max_time;
@@ -92,12 +92,12 @@ run(void)
 		time_left = atol(time_left_str);
 	}
 
-	printf("Time left: %lds\n", time_left);
-	printf("You already spent %lds in the TTY\n", max_time - time_left);
+	printf("left: %lds\n", time_left);
+	printf("spent: %lds\n", max_time - time_left);
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
 	run();
 	return 0;

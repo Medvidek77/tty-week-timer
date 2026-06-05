@@ -15,12 +15,13 @@
 
 #define BUF_SIZE 4096
 
-static volatile int running = 1;
+static int server_sock;
 
 static void
 handle_sigint(int sig)
 {
-	running = 0;
+	close(server_sock);
+	exit(0);
 }
 
 static void
@@ -48,26 +49,18 @@ handle_client(int client_sock)
 	if (bytes_read > 0) {
 		buffer[bytes_read] = '\0';
 
-		/* Only respond to GET requests */
 		if (strncmp(buffer, "GET ", 4) == 0) {
 			char state[256];
 			FILE *fp = fopen(server_state_file, "r");
 			if (fp) {
-				if (fgets(state, sizeof(state), fp) != NULL) {
-					/* Strip newline */
-					size_t len = strlen(state);
-					while (len > 0 && (state[len - 1] == '\n' || state[len - 1] == '\r')) {
-						state[len - 1] = '\0';
-						len--;
-					}
+				if (fgets(state, sizeof(state), fp)) {
+					size_t len = strcspn(state, "\r\n");
+					state[len] = '\0';
 
-					/* If state is START, return 604800 (1 week),
-					 * otherwise return the state directly (WAITING, END! or seconds) */
-					if (strcmp(state, "START") == 0) {
+					if (strcmp(state, "START") == 0)
 						send_response(client_sock, "604800");
-					} else {
+					else
 						send_response(client_sock, state);
-					}
 				} else {
 					send_response(client_sock, "WAITING");
 				}
@@ -81,9 +74,9 @@ handle_client(int client_sock)
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
-	int server_sock, client_sock;
+	int client_sock;
 	struct sockaddr_in server_addr, client_addr;
 	socklen_t client_len = sizeof(client_addr);
 	int opt = 1;
@@ -94,14 +87,14 @@ main(int argc, char *argv[])
 	/* Ignore SIGPIPE in case client drops connection early */
 	signal(SIGPIPE, SIG_IGN);
 
-	if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-		perror("Socket failed");
-		exit(EXIT_FAILURE);
+	if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		perror("socket");
+		exit(1);
 	}
 
-	if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-		perror("setsockopt failed");
-		exit(EXIT_FAILURE);
+	if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+		perror("setsockopt");
+		exit(1);
 	}
 
 	server_addr.sin_family = AF_INET;
@@ -109,31 +102,28 @@ main(int argc, char *argv[])
 	server_addr.sin_port = htons(server_port);
 
 	if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-		perror("Bind failed");
-		exit(EXIT_FAILURE);
+		perror("bind");
+		exit(1);
 	}
 
 	if (listen(server_sock, 3) < 0) {
-		perror("Listen failed");
-		exit(EXIT_FAILURE);
+		perror("listen");
+		exit(1);
 	}
 
-	printf("tty_week_server listening on %s:%d\n", server_host, server_port);
-	printf("State is controlled by '%s'. Put 'START' for 1 week, 'WAITING' or 'END!'.\n", server_state_file);
+	if (debug_mode) {
+		printf("listen: %s:%d\n", server_host, server_port);
+		printf("state file: %s\n", server_state_file);
+	}
 
-	while (running) {
+	while (1) {
 		client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_len);
 		if (client_sock < 0) {
-			if (running) {
-				perror("Accept failed");
-			}
+			perror("accept");
 			continue;
 		}
-
 		handle_client(client_sock);
 	}
 
-	close(server_sock);
-	printf("\nServer shut down.\n");
 	return 0;
 }
