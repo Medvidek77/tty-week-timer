@@ -41,7 +41,22 @@ send_response(int client_sock, const char *body)
 }
 
 static void
-handle_client(int client_sock)
+log_access(const char *ip, const char *state)
+{
+	FILE *fp = fopen(server_log_file, "a");
+	if (fp) {
+		time_t now = time(NULL);
+		struct tm *tm_info = localtime(&now);
+		char time_str[26];
+		strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+
+		fprintf(fp, "[%s] IP: %s | State Sent: %s\n", time_str, ip, state);
+		fclose(fp);
+	}
+}
+
+static void
+handle_client(int client_sock, struct sockaddr_in *client_addr)
 {
 	char buffer[BUF_SIZE];
 	ssize_t bytes_read = read(client_sock, buffer, sizeof(buffer) - 1);
@@ -51,6 +66,8 @@ handle_client(int client_sock)
 
 		if (strncmp(buffer, "GET ", 4) == 0) {
 			char state[256];
+			char response_state[256] = "WAITING";
+
 			FILE *fp = fopen(server_state_file, "r");
 			if (fp) {
 				if (fgets(state, sizeof(state), fp)) {
@@ -58,16 +75,17 @@ handle_client(int client_sock)
 					state[len] = '\0';
 
 					if (strcmp(state, "START") == 0)
-						send_response(client_sock, "604800");
+						strncpy(response_state, "604800", sizeof(response_state));
 					else
-						send_response(client_sock, state);
-				} else {
-					send_response(client_sock, "WAITING");
+						strncpy(response_state, state, sizeof(response_state));
 				}
 				fclose(fp);
-			} else {
-				send_response(client_sock, "WAITING");
 			}
+
+			send_response(client_sock, response_state);
+
+			char *ip = inet_ntoa(client_addr->sin_addr);
+			log_access(ip, response_state);
 		}
 	}
 	close(client_sock);
@@ -122,7 +140,7 @@ main(void)
 			perror("accept");
 			continue;
 		}
-		handle_client(client_sock);
+		handle_client(client_sock, &client_addr);
 	}
 
 	return 0;

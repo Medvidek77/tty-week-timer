@@ -7,6 +7,7 @@ static const char *api_url = "http://127.0.0.1:8080/";
 static const char *server_host = "0.0.0.0";
 static const int server_port = 8080;
 static const char *server_state_file = "server_state.txt";
+static const char *server_log_file = "server.log";
 
 /* Save location for the timer. ~ is not expanded automatically in C,
  * so we will construct this dynamically using $HOME if not absolute.
