@@ -7,11 +7,13 @@ VERSION = 1.0
 PREFIX = /usr/local
 MANPREFIX = ${PREFIX}/share/man
 
+# includes and libs
+INCS = -I/usr/local/include
+LIBS = -L/usr/local/lib -lcurl
+
 # flags
-# We use curl for HTTP requests in the daemon
-LIBS = -lcurl
 CPPFLAGS = -DVERSION=\"${VERSION}\" -D_POSIX_C_SOURCE=200809L
-CFLAGS = -std=c99 -pedantic -Wall -O2 ${CPPFLAGS}
+CFLAGS = -std=c99 -pedantic -Wall -O2 ${INCS} ${CPPFLAGS}
 LDFLAGS = ${LIBS}
 
 # compiler and linker

@@ -17,7 +17,7 @@ config.h:
 	cp config.def.h $@
 
 tty_week: tty_week.o
-	${CC} -o $@ tty_week.o ${LDFLAGS}
+	${CC} -o $@ tty_week.o
 
 tty_weekd: tty_weekd.o
 	${CC} -o $@ tty_weekd.o ${LDFLAGS}

@@ -1,1 +1,4 @@
 config.h
+tty_week
+tty_weekd
+*.o
